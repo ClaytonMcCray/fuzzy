@@ -5,13 +5,9 @@ import (
 	"flag"
 	"io"
 	"log"
-	"os"
 )
 
 func main() {
-	if err := Run(os.Stdin, os.Stdout, os.Stderr, os.Args); err != nil {
-		log.Fatal(err)
-	}
 }
 
 func Run(stdin io.Reader, stdout, stderr io.Writer, args []string) error {
