@@ -46,13 +46,12 @@ func (x *X) Noop() {
 }
 `
 	expr := setupAndParse(t, toParse)
-	fs := NewFuzzySet()
+	fs := NewFuzzySet("main", "my/main")
 
 	ast.Walk(fs, expr)
 
 	expectedFuncs := 2
-	expectedPtrs := 2
-	expectedAutos := 2
+	expectedPtrs := 4
 
 	if len(fs.funcs) != expectedFuncs {
 		t.Fatalf("wrong numbder of fs.funcs, expected %d, got %d", expectedFuncs, len(fs.funcs))
@@ -60,9 +59,5 @@ func (x *X) Noop() {
 
 	if len(fs.ptrRecvrs) != expectedPtrs {
 		t.Errorf("wrong number of fs.ptrRecvrs, expected %d got %d", expectedPtrs, len(fs.ptrRecvrs))
-	}
-
-	if len(fs.autoRecvrs) != expectedAutos {
-		t.Errorf("wrong number of fs.autoRecvrs, expected %d got %d", expectedAutos, len(fs.autoRecvrs))
 	}
 }

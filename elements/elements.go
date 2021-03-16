@@ -9,10 +9,12 @@ type fuzzable int
 const (
 	PlainFuncs fuzzable = iota
 	PtrReceivers
-	AutoReceivers
 )
 
 type FuzzySet struct {
+	PackageName         string
+	CompletePackagePath string
+
 	// funcs only require:
 	// 1) Know the function name and arguments
 	// 2) Fuzz the inputs
@@ -27,18 +29,13 @@ type FuzzySet struct {
 	// 4) Fuzz the inputs
 	// 5) Call the functions
 	ptrRecvrs []*ast.FuncDecl
-
-	// autoRecvrs require:
-	// 1) Know that the receiver is local
-	// 2) Know the arguments
-	// 3) Fuzz the type, which requires taking its address
-	// 4) Fuzz the inputs
-	// 5) Call the functions
-	autoRecvrs []*ast.FuncDecl
 }
 
-func NewFuzzySet() *FuzzySet {
-	return &FuzzySet{}
+func NewFuzzySet(packageName, completePackagePath string) *FuzzySet {
+	return &FuzzySet{
+		PackageName:         packageName,
+		CompletePackagePath: completePackagePath,
+	}
 }
 
 func (fs *FuzzySet) Inspect(which fuzzable, do func(*ast.FuncDecl)) {
@@ -52,11 +49,6 @@ func (fs *FuzzySet) Inspect(which fuzzable, do func(*ast.FuncDecl)) {
 		for _, val := range fs.ptrRecvrs {
 			do(val)
 		}
-
-	case AutoReceivers:
-		for _, val := range fs.autoRecvrs {
-			do(val)
-		}
 	}
 }
 
@@ -66,13 +58,8 @@ func (fs *FuzzySet) Visit(n ast.Node) ast.Visitor {
 		if concrete.Recv == nil {
 			fs.funcs = append(fs.funcs, concrete)
 		} else {
-			for _, field := range concrete.Recv.List {
-				switch field.Type.(type) {
-				case *ast.StarExpr:
-					fs.ptrRecvrs = append(fs.ptrRecvrs, concrete)
-				case *ast.Ident:
-					fs.autoRecvrs = append(fs.autoRecvrs, concrete)
-				}
+			for range concrete.Recv.List {
+				fs.ptrRecvrs = append(fs.ptrRecvrs, concrete)
 			}
 		}
 	}
