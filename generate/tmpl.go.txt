@@ -10,50 +10,20 @@ import (
 func {{.FunctionUnderTest}}FuzzyTest(t *testing.T) {
 	fuzzer := fuzz.New()
 
-	{{range .CompositePtrsToInit -}}
-	{{.Name}} := &{{.Type}}{}
-	fuzzer.Fuzz({{.Name}})
-	{{end -}}
-
-	{{range .CompositeAutosToInit}}
-	{{.Name}} := {{.Type}}{}
-	fuzzer.Fuzz(&{{.Name}})
-	{{end -}}
-
-	{{range .SimplePtrsToInit}}
+	{{range .PtrsToInit}}
 	{{.Name}} := new({{.Type}})
 	fuzzer.Fuzz({{.Name}})
 	{{end -}}
 
-	{{range .SimpleAutosToInit}}
-	var {{.Name}} {{.Type}}
-	fuzzer.Fuzz(&{{.Name}})
-	{{end -}}
-
 	{{if .ReceiverName.Type}}
-		{{if .ReceiverIsPointer}}
-			{{if .ReceiverIsComposite}}
-				{{.ReceiverName.Name -}} := &{{.ReceiverName.Type}}{}
-				fuzzer.Fuzz({{.ReceiverName.Name -}})
-			{{else -}}
-				{{.ReceiverName.Name}} := new({{.ReceiverName.Type}})
-				fuzzer.Fuzz({{.ReceiverName.Name -}})
-			{{end -}}
-		{{else -}}
-			{{if .ReceiverIsComposite -}}
-				{{.ReceiverName.Name -}} := {{.ReceiverName.Type -}}{}
-				fuzzer.Fuzz(&{{.ReceiverName.Name -}})
-			{{else -}}
-				var {{.ReceiverName.Name -}} {{.ReceiverName.Type -}}
-				fuzzer.Fuzz(&{{.ReceiverName.Name -}})
-			{{end -}}
-		{{end -}}
+		{{.ReceiverName.Name}} := new({{.ReceiverName.Type}})
+		fuzzer.Fuzz({{.ReceiverName.Name -}})
 	{{end -}}
 
 	{{if .ReceiverName.Type }}
-		{{.ReceiverName.Name}}.{{.FunctionUnderTest}}({{range .FunctionArgumentNamesInOrder}} {{. -}}, {{end}})
+		{{.ReceiverName.Name}}.{{.FunctionUnderTest}}({{range .PtrsToInit}} {{if not .IsPointer}} * {{end}} {{.Name}} ,{{end}})
 	{{else }}
-		{{.FunctionUnderTest -}}({{range .FunctionArgumentNamesInOrder -}} {{. -}}, {{end -}})
+		{{.FunctionUnderTest -}}({{range .PtrsToInit}} {{if not .IsPointer}} * {{end}} {{.Name}}, {{end -}})
 	{{end}}
 
 }
