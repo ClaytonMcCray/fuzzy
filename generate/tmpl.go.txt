@@ -3,7 +3,6 @@ package {{.PackageName}}
 import (
 	"testing"
 	"github.com/google/gofuzz"
-	"{{.CompletePackagePath -}}"
 )
 
 {{range .TestsToGenerate -}}

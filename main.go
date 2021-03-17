@@ -10,6 +10,8 @@ import (
 func main() {
 }
 
+// TODO: when parsing, make sure to filter out *Test.go files, and note in help dialogue
+//	 that fuzz tests should be written to a *Test.go file.
 func Run(stdin io.Reader, stdout, stderr io.Writer, args []string) error {
 	log.SetOutput(stdout)
 	flags := flag.NewFlagSet(args[0], flag.PanicOnError)

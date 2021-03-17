@@ -26,8 +26,8 @@ func PlainFunc(x *ast.Ident) {}
 	fs := elements.NewFuzzySet("mypackage", "git.com/me/mine/mypackage")
 	ast.Walk(fs, parsed)
 
-	in := CreateMetaData(fs)
-	b, err := in.DoTmpl()
+	in := createMetaData(fs)
+	b, err := in.doTmpl()
 
 	if err != nil {
 		t.Fatal(err)
@@ -76,7 +76,7 @@ func TestMe2(b, c int) {}
 	fs := elements.NewFuzzySet("main", "my/main")
 	ast.Walk(fs, parsed)
 
-	md := CreateMetaData(fs)
+	md := createMetaData(fs)
 
 	if md.CompletePackagePath != "my/main" {
 		t.Errorf("wrong CompletePackagePath, got %s", md.CompletePackagePath)
@@ -150,7 +150,7 @@ func (x *X) XFuncTwoNotPtr(a, b string) {}
 	fs := elements.NewFuzzySet("main", "my/main")
 	ast.Walk(fs, parsed)
 
-	md := CreateMetaData(fs)
+	md := createMetaData(fs)
 	t.Log("finished CreateMetaData")
 
 	if md.CompletePackagePath != "my/main" {

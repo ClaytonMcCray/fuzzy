@@ -11,8 +11,12 @@ const (
 	PtrReceivers
 )
 
+// FuzzySet holds the set of functions for which fuzz tests are generated.
 type FuzzySet struct {
-	PackageName         string
+	// PackageName is the name used in selector statements into the package.
+	PackageName string
+
+	// CompletePackagePath is the import path of the package.
 	CompletePackagePath string
 
 	// funcs only require:
@@ -31,6 +35,11 @@ type FuzzySet struct {
 	ptrRecvrs []*ast.FuncDecl
 }
 
+// TODO: I think completePackagePath can be removed.
+
+// NewFuzzySet creates a FuzzySet where packageName is the name of
+// the package and completePackagePath is the import path other packages
+// would use.
 func NewFuzzySet(packageName, completePackagePath string) *FuzzySet {
 	return &FuzzySet{
 		PackageName:         packageName,
@@ -38,6 +47,7 @@ func NewFuzzySet(packageName, completePackagePath string) *FuzzySet {
 	}
 }
 
+// Inspect calls do on each function declaration of the requested type.
 func (fs *FuzzySet) Inspect(which fuzzable, do func(*ast.FuncDecl)) {
 	switch which {
 	case PlainFuncs:
@@ -52,6 +62,8 @@ func (fs *FuzzySet) Inspect(which fuzzable, do func(*ast.FuncDecl)) {
 	}
 }
 
+// Visit is used to add decls to  the FuzzySet. It satisfies
+// the ast.Visitor interface.
 func (fs *FuzzySet) Visit(n ast.Node) ast.Visitor {
 	switch concrete := n.(type) {
 	case *ast.FuncDecl:
