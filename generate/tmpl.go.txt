@@ -1,4 +1,4 @@
-package {{.PackageName -}}_fuzzy_test
+package {{.PackageName}}
 
 import (
 	"testing"
