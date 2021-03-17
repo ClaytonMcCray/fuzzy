@@ -21,9 +21,9 @@ func {{.FunctionUnderTest}}FuzzyTest(t *testing.T) {
 	{{end -}}
 
 	{{if .ReceiverName.Type }}
-		{{.ReceiverName.Name}}.{{.FunctionUnderTest}}({{range .PtrsToInit}} {{if not .IsPointer}} * {{end}} {{.Name}} ,{{end}})
+		{{.ReceiverName.Name}}.{{.FunctionUnderTest}}({{range .PtrsToInit}} {{if not .FunctionArgIsPointer}} * {{end}} {{.Name}} ,{{end}})
 	{{else }}
-		{{.FunctionUnderTest -}}({{range .PtrsToInit}} {{if not .IsPointer}} * {{end}} {{.Name}}, {{end -}})
+		{{.FunctionUnderTest -}}({{range .PtrsToInit}} {{if not .FunctionArgIsPointer}} * {{end}} {{.Name}}, {{end -}})
 	{{end}}
 
 }

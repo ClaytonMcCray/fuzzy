@@ -29,15 +29,16 @@ var headerTmpl string
 
 type argDescriptor struct {
 	Name, Type string
-	IsPointer  bool
+
+	// FunctionArgIsPointer only matters for function arguments.
+	// All receivers are treated as pointers.
+	FunctionArgIsPointer bool
 }
 
 type singleTest struct {
-	FunctionUnderTest   string
-	PtrsToInit          []argDescriptor
-	ReceiverName        argDescriptor
-	ReceiverIsPointer   bool
-	ReceiverIsComposite bool
+	FunctionUnderTest string
+	PtrsToInit        []argDescriptor
+	ReceiverName      argDescriptor
 }
 
 type metaData struct {
@@ -48,7 +49,6 @@ type metaData struct {
 
 func (st *singleTest) convertFields(fields []*ast.Field) {
 	for _, arg := range fields {
-		log.Printf("Working on %s", arg.Names[0].Name)
 		if len(arg.Names) < 1 {
 			log.Fatalf("failing in CreateMetaData, arg.Names: %v, too short", arg.Names)
 		}
@@ -57,37 +57,32 @@ func (st *singleTest) convertFields(fields []*ast.Field) {
 		case *ast.StarExpr:
 			switch arg.Type.(*ast.StarExpr).X.(type) {
 			case *ast.Ident:
-				log.Printf("%s is *ast.StarExpr", arg.Names[0].Name)
 				st.PtrsToInit = append(st.PtrsToInit, argDescriptor{
-					Name:      arg.Names[0].Name,
-					Type:      arg.Type.(*ast.StarExpr).X.(*ast.Ident).Name,
-					IsPointer: true,
+					Name:                 arg.Names[0].Name,
+					Type:                 arg.Type.(*ast.StarExpr).X.(*ast.Ident).Name,
+					FunctionArgIsPointer: true,
 				})
 
 			case *ast.SelectorExpr:
-				log.Printf("%s is *ast.StarExpr (selector)", arg.Names[0].Name)
 				st.PtrsToInit = append(st.PtrsToInit, argDescriptor{
 					Name: arg.Names[0].Name,
 					Type: fmt.Sprintf("%s.%s",
 						arg.Type.(*ast.StarExpr).X.(*ast.SelectorExpr).X.(*ast.Ident).Name,
 						arg.Type.(*ast.StarExpr).X.(*ast.SelectorExpr).Sel.Name),
 
-					IsPointer: true,
+					FunctionArgIsPointer: true,
 				})
 			}
 
 		case *ast.SelectorExpr:
-			log.Printf("%s is *ast.SelectorExpr", arg.Names[0].Name)
-			log.Printf("%s is not *ast.StarExpr", arg.Names[0].Name)
 			st.PtrsToInit = append(st.PtrsToInit, argDescriptor{
 				Name: arg.Names[0].Name,
 				Type: fmt.Sprintf("%s.%s", arg.Type.(*ast.SelectorExpr).X.(*ast.Ident).Name,
 					arg.Type.(*ast.SelectorExpr).Sel.Name),
-				IsPointer: false,
+				FunctionArgIsPointer: false,
 			})
 
 		default:
-			log.Printf("%s hit default", arg.Names[0].Name)
 			st.PtrsToInit = append(st.PtrsToInit, argDescriptor{
 				Name: arg.Names[0].Name,
 				Type: arg.Type.(*ast.Ident).Name,
@@ -116,11 +111,30 @@ func CreateMetaData(fs *elements.FuzzySet) *metaData {
 	})
 
 	// TODO: handle the receiver functions
+	fs.Inspect(elements.PtrReceivers, func(fd *ast.FuncDecl) {
+		curTest := &singleTest{
+			FunctionUnderTest: fd.Name.Name,
+			ReceiverName: argDescriptor{
+				Name: fmt.Sprintf("%s", fd.Recv.List[0].Names[0]),
+			},
+		}
+
+		switch fd.Recv.List[0].Type.(type) {
+		case *ast.Ident:
+			curTest.ReceiverName.Type = fmt.Sprintf("%v", fd.Recv.List[0].Type.(*ast.Ident).Name)
+		case *ast.StarExpr:
+			curTest.ReceiverName.Type =
+				fmt.Sprintf("%v", fd.Recv.List[0].Type.(*ast.StarExpr).X.(*ast.Ident).Name)
+		}
+
+		curTest.convertFields(fd.Type.Params.List)
+		md.TestsToGenerate = append(md.TestsToGenerate, curTest)
+	})
 
 	return md
 }
 
-func (md *metaData) Do() ([]byte, error) {
+func (md *metaData) DoTmpl() ([]byte, error) {
 	b := &bytes.Buffer{}
 	tmpl, err := template.New("package_fuzzy_test").Parse(headerTmpl)
 	if err != nil {
