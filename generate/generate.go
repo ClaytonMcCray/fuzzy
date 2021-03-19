@@ -3,7 +3,6 @@ package generate
 import (
 	"bytes"
 	_ "embed"
-	"errors"
 	"fmt"
 	"go/ast"
 	"go/format"
@@ -39,9 +38,8 @@ type singleTest struct {
 }
 
 type metaData struct {
-	PackageName         string
-	CompletePackagePath string
-	TestsToGenerate     []*singleTest
+	PackageName     string
+	TestsToGenerate []*singleTest
 }
 
 func (st *singleTest) convertFields(fields []*ast.Field) {
@@ -92,8 +90,7 @@ func (st *singleTest) convertFields(fields []*ast.Field) {
 // needed to execute the test function templates.
 func createMetaData(fs *elements.FuzzySet) *metaData {
 	md := &metaData{
-		PackageName:         fs.PackageName,
-		CompletePackagePath: fs.CompletePackagePath,
+		PackageName: fs.PackageName,
 	}
 
 	fs.Inspect(elements.PlainFuncs, func(fd *ast.FuncDecl) {
@@ -146,5 +143,15 @@ func (md *metaData) doTmpl() ([]byte, error) {
 // TODO: This is the entry point of the package. All work should be
 // 	done here.
 func Gen(stdout, stderr io.Writer, input *ast.Package) error {
-	return errors.New("not implemented")
+	log.SetOutput(stderr)
+	fs := elements.NewFuzzySet(input.Name)
+	ast.Walk(fs, input)
+	md := createMetaData(fs)
+	output, err := md.doTmpl()
+	if err != nil {
+		return err
+	}
+
+	stdout.Write(output)
+	return nil
 }

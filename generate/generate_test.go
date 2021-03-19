@@ -23,7 +23,7 @@ func (mrt *MyRecvrType) MyFunc(one int, two int, three *bytes.Buffer) error {
 func PlainFunc(x *ast.Ident) {}
 `
 	parsed := setupAndParse(t, src)
-	fs := elements.NewFuzzySet("mypackage", "git.com/me/mine/mypackage")
+	fs := elements.NewFuzzySet("mypackage")
 	ast.Walk(fs, parsed)
 
 	in := createMetaData(fs)
@@ -73,14 +73,10 @@ func TestMe(x int, y *float64, z bytes.Buffer, a *ast.Ident) error {
 func TestMe2(b, c int) {}
 `
 	parsed := setupAndParse(t, src)
-	fs := elements.NewFuzzySet("main", "my/main")
+	fs := elements.NewFuzzySet("main")
 	ast.Walk(fs, parsed)
 
 	md := createMetaData(fs)
-
-	if md.CompletePackagePath != "my/main" {
-		t.Errorf("wrong CompletePackagePath, got %s", md.CompletePackagePath)
-	}
 
 	if md.PackageName != "main" {
 		t.Errorf("wrong PackageName, got %s", md.PackageName)
@@ -147,15 +143,11 @@ func (x *X) XFuncTwoNotPtr(a, b string) {}
 		},
 	}
 
-	fs := elements.NewFuzzySet("main", "my/main")
+	fs := elements.NewFuzzySet("main")
 	ast.Walk(fs, parsed)
 
 	md := createMetaData(fs)
 	t.Log("finished CreateMetaData")
-
-	if md.CompletePackagePath != "my/main" {
-		t.Errorf("wrong CompletePackagePath, got %s", md.CompletePackagePath)
-	}
 
 	if md.PackageName != "main" {
 		t.Errorf("wrong PackageName, got %s", md.PackageName)

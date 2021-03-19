@@ -16,9 +16,6 @@ type FuzzySet struct {
 	// PackageName is the name used in selector statements into the package.
 	PackageName string
 
-	// CompletePackagePath is the import path of the package.
-	CompletePackagePath string
-
 	// funcs only require:
 	// 1) Know the function name and arguments
 	// 2) Fuzz the inputs
@@ -35,15 +32,12 @@ type FuzzySet struct {
 	ptrRecvrs []*ast.FuncDecl
 }
 
-// TODO: I think completePackagePath can be removed.
-
 // NewFuzzySet creates a FuzzySet where packageName is the name of
 // the package and completePackagePath is the import path other packages
 // would use.
-func NewFuzzySet(packageName, completePackagePath string) *FuzzySet {
+func NewFuzzySet(packageName string) *FuzzySet {
 	return &FuzzySet{
-		PackageName:         packageName,
-		CompletePackagePath: completePackagePath,
+		PackageName: packageName,
 	}
 }
 
