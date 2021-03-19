@@ -71,6 +71,23 @@ func TestMe(x int, y *float64, z bytes.Buffer, a *ast.Ident) error {
 }
 
 func TestMe2(b, c int) {}
+
+func TestMe3(sliceType []int,
+	slicePointerType []*int,
+	arrayType [10]int,
+	arrayPointerType [10]*int,
+	arraySelectorType [10]bytes.Buffer,
+	arraySelectorPointerType [10]*bytes.Buffer,
+	sliceSelectorType []bytes.Buffer,
+	sliceSelectorPointerType []*bytes.Buffer,
+	ptrSlice *[]int,
+	ptrSlicePtr *[]*int,
+	ptrArray *[10]int,
+	ptryArrayPtr *[10]*int,
+	ptrSliceSelector *[]bytes.Buffer,
+	ptrSlicePtrSelector *[]*bytes.Buffer,
+	ptrArraySelector *[10]bytes.Buffer,
+	ptrArrayPtrSelector *[10]*bytes.Buffer) {}
 `
 	parsed := setupAndParse(t, src)
 	fs := elements.NewFuzzySet("main")
@@ -102,6 +119,31 @@ func TestMe2(b, c int) {}
 		PtrsToInit: []argDescriptor{
 			{"b", "int", false},
 			{"c", "int", false},
+		},
+	}
+
+	assertEquivSingleTest(t, actualTest, est)
+
+	actualTest = md.TestsToGenerate[2]
+	est = &singleTest{
+		FunctionUnderTest: "TestMe3",
+		PtrsToInit: []argDescriptor{
+			{"sliceType", "[]int", false},
+			{"slicePointerType", "[]*int", false},
+			{"arrayType", "[10]int", false},
+			{"arrayPointerType", "[10]*int", false},
+			{"arraySelectorType", "[10]bytes.Buffer", false},
+			{"arraySelectorPointerType", "[10]*bytes.Buffer", false},
+			{"sliceSelectorType", "[]bytes.Buffer", false},
+			{"sliceSelectorPointerType", "[]*bytes.Buffer", false},
+			{"ptrSlice", "[]int", true},
+			{"ptrSlicePtr", "[]*int", true},
+			{"ptrArray", "[10]int", true},
+			{"ptrArrayPtr", "[10]*int", true},
+			{"ptrSliceSelector", "[]bytes.Buffer", true},
+			{"ptrSlicePtrSelector", "[]*bytes.Buffer", true},
+			{"ptrArraySelector", "[10]bytes.Buffer", true},
+			{"ptrArrayPtrSelector", "[10]*bytes.Buffer", true},
 		},
 	}
 
